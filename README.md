@@ -1,1 +1,0 @@
-# LSC.OnlineCourse.DotNetProject
