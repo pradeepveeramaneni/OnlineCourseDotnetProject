@@ -17,6 +17,6 @@
 
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\LSC.OnlineCourse.Service\LSC.OnlineCourse.Service.csproj" />
+	  <ProjectReference Include="..\LSC.OnlineCourse.Core\LSC.OnlineCourse.Core.csproj" />
 	</ItemGroup>
 </Project>
