@@ -1,7 +1,14 @@
+<<<<<<< HEAD
 # ASP.NET
 # Build and test ASP.NET projects.
 # Add steps that publish symbols, save build artifacts, deploy, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
+=======
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+>>>>>>> cdd2ea0f11d184640bfd6b27eb64f00d444feb8f
 
 trigger:
 - main
@@ -24,7 +31,11 @@ steps:
 - task: VSBuild@1
   inputs:
     solution: '$(solution)'
+<<<<<<< HEAD
     msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
+=======
+    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+>>>>>>> cdd2ea0f11d184640bfd6b27eb64f00d444feb8f
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
@@ -35,6 +46,11 @@ steps:
 
 - task: PublishBuildArtifacts@1
   inputs:
+<<<<<<< HEAD
     PathtoPublish: '$(build.artifactStagingDirectory)'
     ArtifactName: 'drop'
+=======
+    pathToPublish: '$(build.artifactStagingDirectory)'
+    artifactName: 'drop'
+>>>>>>> cdd2ea0f11d184640bfd6b27eb64f00d444feb8f
     publishLocation: 'Container'
