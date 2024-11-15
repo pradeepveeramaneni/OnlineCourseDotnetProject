@@ -4,8 +4,11 @@ using LSC.OnlineCourse.Data;
 using LSC.OnlineCourse.Data.Entities;
 using LSC.OnlineCourse.Service;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Logging;
 using Serilog;
 using Serilog.Templates;
 using System.Linq.Expressions;
@@ -53,10 +56,12 @@ namespace LSC.OnlineCourse.API
                         configuration.GetConnectionString("DbContext"),
                         provideroptions => provideroptions.EnableRetryOnFailure()
                         );
-                    options.EnableSensitiveDataLogging();
+                   // options.EnableSensitiveDataLogging();
+                    options.EnableDetailedErrors();
                 });
 
                 builder.Services.AddControllers();
+
                 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
                 builder.Services.AddEndpointsApiExplorer();
                 builder.Services.AddSwaggerGen();
@@ -70,9 +75,67 @@ namespace LSC.OnlineCourse.API
                 builder.Services.AddTransient<RequestBodyLoggingMiddleware>();
                 builder.Services.AddTransient<ResponseBodyLoggingMiddleware>();
 
+
+                builder.Services.AddCors(options =>
+                {
+                    options.AddPolicy("default", policy =>
+                    {
+                        policy.WithOrigins("http://localhost:4200", "https://smartcoddingbypradeep-ui.azurewebsites.net") // Corrected frontend URL without trailing slash
+                              .AllowAnyHeader()
+                              .AllowAnyMethod()
+                              .AllowCredentials();
+
+                    });
+                });
+
+                #region AD B2C configuration
+                builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                  .AddMicrosoftIdentityWebApi(options =>
+                  {
+                      configuration.Bind("AzureAdB2C", options);
+
+                      options.Events = new JwtBearerEvents();
+                      //{
+                      //    OnTokenValidated = context =>
+                      //    {
+                      //        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+
+                      //        // Access the scope claim (scp) directly
+                      //        var scopeClaim = context.Principal?.Claims.FirstOrDefault(c => c.Type == "scp")?.Value;
+
+                      //        if (scopeClaim != null)
+                      //        {
+                      //            logger.LogInformation("Scope found in token: {Scope}", scopeClaim);
+                      //        }
+                      //        else
+                      //        {
+                      //            logger.LogWarning("Scope claim not found in token.");
+                      //        }
+
+                      //        return Task.CompletedTask;
+                      //    },
+                      //    OnAuthenticationFailed = context =>
+                      //    {
+                      //        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                      //        logger.LogError("Authentication failed: {Message}", context.Exception.Message);
+                      //        return Task.CompletedTask;
+                      //    },
+                      //    OnChallenge = context =>
+                      //    {
+                      //        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                      //        logger.LogError("Challenge error: {ErrorDescription}", context.ErrorDescription);
+                      //        return Task.CompletedTask;
+                      //    }
+                      //};
+                  }, options => { configuration.Bind("AzureAdB2C", options); });
+
+                // The following flag can be used to get more descriptive errors in development environments
+                IdentityModelEventSource.ShowPII = false;
+                #endregion AD B2C configuration
+
                 var app = builder.Build();
 
-                // app.UseCors("default");
+                app.UseCors("default");
                 app.UseExceptionHandler(errorApp =>
                 {
                     errorApp.Run(async context =>
@@ -92,16 +155,17 @@ namespace LSC.OnlineCourse.API
                 app.UseMiddleware<ResponseBodyLoggingMiddleware>();
 
                 // Configure the HTTP request pipeline.
-                if (app.Environment.IsDevelopment())
-                {
+               // if (app.Environment.IsDevelopment())
+               // {
                     app.UseSwagger();
                     app.UseSwaggerUI();
-                }
+               // }
 
-
+                app.UseRouting();
 
                 app.UseHttpsRedirection();
 
+                app.UseAuthentication();
                 app.UseAuthorization();
 
 
