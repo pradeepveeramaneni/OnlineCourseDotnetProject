@@ -1,5 +1,4 @@
-﻿using LSC.OnlineCourse.Core.Entities;
-using LSC.OnlineCourse.Core.Models;
+﻿using LSC.OnlineCourse.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
