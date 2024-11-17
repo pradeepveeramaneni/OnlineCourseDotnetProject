@@ -1,4 +1,4 @@
-﻿namespace LSC.OnlineCourse.Data
+﻿namespace LSC.OnlineCourse.Service
 {
     public class Class1
     {

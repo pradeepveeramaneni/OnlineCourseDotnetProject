@@ -1,4 +1,5 @@
 
+using LSC.OnlineCourse.API.common;
 using LSC.OnlineCourse.API.Middlewares;
 using LSC.OnlineCourse.Data;
 using LSC.OnlineCourse.Data.Entities;
@@ -6,7 +7,9 @@ using LSC.OnlineCourse.Service;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
 using Serilog;
@@ -32,6 +35,17 @@ namespace LSC.OnlineCourse.API
 
                 var builder = WebApplication.CreateBuilder(args);
                 var configuration = builder.Configuration;
+
+                builder.Services.AddHealthChecks()
+                    .AddSqlServer(
+                      connectionString: configuration.GetConnectionString("DbContext"),
+                      healthQuery: "SELECT 1;", // Query to check database health.
+                      name: "sqlserver",
+                      failureStatus: HealthStatus.Degraded, // Degraded health status if the check fails.
+                      tags: new[] { "db", "sql" })
+                   .AddCheck("Memory", new PrivateMemoryHealthCheck(1024 * 1024 * 1024)); // A custom health check for memory.
+
+
 
                 builder.Services.AddApplicationInsightsTelemetry();
 
@@ -62,6 +76,8 @@ namespace LSC.OnlineCourse.API
 
                 builder.Services.AddControllers();
 
+                builder.Services.AddAutoMapper(typeof(MappingProfile));
+
                 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
                 builder.Services.AddEndpointsApiExplorer();
                 builder.Services.AddSwaggerGen();
@@ -72,8 +88,12 @@ namespace LSC.OnlineCourse.API
                 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
                 builder.Services.AddScoped<ICourseService, CourseService>();
 
+                builder.Services.AddScoped<IVideoRequestRepository, VideoRequestRepository>();
+                builder.Services.AddScoped<IVideoRequestService, VideoRequestService>();
+
                 builder.Services.AddTransient<RequestBodyLoggingMiddleware>();
                 builder.Services.AddTransient<ResponseBodyLoggingMiddleware>();
+                builder.Services.AddScoped<IUserClaims, UserClaims>();
 
 
                 builder.Services.AddCors(options =>
@@ -167,6 +187,37 @@ namespace LSC.OnlineCourse.API
 
                 app.UseAuthentication();
                 app.UseAuthorization();
+
+
+
+                app.MapHealthChecks("/health", new HealthCheckOptions
+                {
+                    ResponseWriter = HealthCheckResponseWriter.WriteJsonResponse
+                });
+
+                // Liveness probe
+                app.MapHealthChecks("/health/live", new HealthCheckOptions
+                {
+                    Predicate = _ => false, // No specific checks, just indicates the app is live
+                    ResponseWriter = async (context, report) =>
+                    {
+                        context.Response.ContentType = "application/json";
+                        var json = new
+                        {
+                            status = report.Status.ToString(),
+                            description = "Liveness check - the app is up"
+                        };
+                        await context.Response.WriteAsJsonAsync(json);
+                    }
+                });
+
+                // Readiness probe
+                app.MapHealthChecks("/health/ready", new HealthCheckOptions
+                {
+                    Predicate = check => check.Tags.Contains("ready"), // Only run checks tagged as "ready"
+                    ResponseWriter = HealthCheckResponseWriter.WriteJsonResponse
+                });
+
 
 
                 app.MapControllers();
