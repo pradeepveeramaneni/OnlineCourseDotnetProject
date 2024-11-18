@@ -6,6 +6,20 @@ using System.Threading.Tasks;
 
 namespace LSC.OnlineCourse.Core.Models
 {
+    public class InstructorModel
+    {
+        public int InstructorId { get; set; }
+
+        public string FirstName { get; set; } = null!;
+
+        public string LastName { get; set; } = null!;
+
+        public string Email { get; set; } = null!;
+
+        public string? Bio { get; set; }
+
+        public int UserId { get; set; }
+    }
     public class CourseDetailModel : CourseModel
     {
         public List<UserReviewModel>? Reviews { get; set; } = new List<UserReviewModel>();
@@ -13,7 +27,6 @@ namespace LSC.OnlineCourse.Core.Models
 
         public required List<SessionDetailModel> SessionDetails { get; set; }
     }
-
     public class CourseModel
     {
         public int CourseId { get; set; }
@@ -41,11 +54,10 @@ namespace LSC.OnlineCourse.Core.Models
         public DateTime? EndDate { get; set; }
 
         public CourseCategoryModel? Category { get; set; } = null!;
-      
         public UserRatingModel? UserRating { get; set; } = null!;
 
-
     }
+
     public class UserReviewModel
     {
         public int ReviewId { get; set; }
@@ -75,7 +87,6 @@ namespace LSC.OnlineCourse.Core.Models
         public int VideoOrder { get; set; }
 
     }
-
     public class UserRatingModel
     {
         public int CourseId { get; set; }

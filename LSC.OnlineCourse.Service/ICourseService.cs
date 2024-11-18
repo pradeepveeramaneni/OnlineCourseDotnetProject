@@ -11,5 +11,10 @@ namespace LSC.OnlineCourse.Service
     {
         Task<List<CourseModel>> GetAllCoursesAsync(int? categoryId = null);
         Task<CourseDetailModel> GetCourseDetailAsync(int courseId);
+        Task AddCourseAsync(CourseDetailModel courseModel);
+        Task UpdateCourseAsync(CourseDetailModel courseModel);
+        Task DeleteCourseAsync(int courseId);
+        Task<List<InstructorModel>> GetAllInstructorsAsync();
+        Task<bool> UpdateCourseThumbnail(string courseThumbnailUrl, int courseId);
     }
 }

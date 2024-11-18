@@ -1,4 +1,5 @@
-﻿using LSC.OnlineCourse.Core.Models;
+﻿using LSC.OnlineCourse.Core.Entities;
+using LSC.OnlineCourse.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,5 +12,13 @@ namespace LSC.OnlineCourse.Data
     {
         Task<List<CourseModel>> GetAllCoursesAsync(int? categoryId=null);
         Task<CourseDetailModel> GetCourseDetailAsync(int courseId);
+
+        Task AddCourseAsync(Course course);
+        Task UpdateCourseAsync(Course course);
+        Task DeleteCourseAsync(int courseId);
+        Task<Course> GetCourseByIdAsync(int courseId);
+        void RemoveSessionDetail(SessionDetail sessionDetail);
+        Task<List<Instructor>> GetAllInstructorsAsync();
+        Task<bool> UpdateCourseThumbnail(string courseThumbnailUrl,int courseId);
     }
 }

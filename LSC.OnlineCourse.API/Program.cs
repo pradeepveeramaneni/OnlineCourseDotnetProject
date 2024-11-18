@@ -95,6 +95,17 @@ namespace LSC.OnlineCourse.API
                 builder.Services.AddTransient<ResponseBodyLoggingMiddleware>();
                 builder.Services.AddScoped<IUserClaims, UserClaims>();
 
+                builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
+                builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
+                builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+                builder.Services.AddScoped<IReviewService, ReviewService>();
+                builder.Services.AddScoped<IEmailNotification, EmailNotification>();
+
+                builder.Services.AddScoped<IAzureBlobStorageService, AzureBlobStorageService>();
+
+                builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+                builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+
 
                 builder.Services.AddCors(options =>
                 {
@@ -110,47 +121,47 @@ namespace LSC.OnlineCourse.API
 
                 #region AD B2C configuration
                 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                  .AddMicrosoftIdentityWebApi(options =>
-                  {
-                      configuration.Bind("AzureAdB2C", options);
+                 .AddMicrosoftIdentityWebApi(options =>
+                 {
+                     configuration.Bind("AzureAdB2C", options);
 
-                      options.Events = new JwtBearerEvents();
-                      //{
-                      //    OnTokenValidated = context =>
-                      //    {
-                      //        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                     options.Events = new JwtBearerEvents
+                     {
+                         OnTokenValidated = context =>
+                         {
+                             var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
 
-                      //        // Access the scope claim (scp) directly
-                      //        var scopeClaim = context.Principal?.Claims.FirstOrDefault(c => c.Type == "scp")?.Value;
+                             // Access the scope claim (scp) directly
+                             var scopeClaim = context.Principal?.Claims.FirstOrDefault(c => c.Type == "scp")?.Value;
 
-                      //        if (scopeClaim != null)
-                      //        {
-                      //            logger.LogInformation("Scope found in token: {Scope}", scopeClaim);
-                      //        }
-                      //        else
-                      //        {
-                      //            logger.LogWarning("Scope claim not found in token.");
-                      //        }
+                             if (scopeClaim != null)
+                             {
+                                 logger.LogInformation("Scope found in token: {Scope}", scopeClaim);
+                             }
+                             else
+                             {
+                                 logger.LogWarning("Scope claim not found in token.");
+                             }
 
-                      //        return Task.CompletedTask;
-                      //    },
-                      //    OnAuthenticationFailed = context =>
-                      //    {
-                      //        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-                      //        logger.LogError("Authentication failed: {Message}", context.Exception.Message);
-                      //        return Task.CompletedTask;
-                      //    },
-                      //    OnChallenge = context =>
-                      //    {
-                      //        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-                      //        logger.LogError("Challenge error: {ErrorDescription}", context.ErrorDescription);
-                      //        return Task.CompletedTask;
-                      //    }
-                      //};
-                  }, options => { configuration.Bind("AzureAdB2C", options); });
+                             return Task.CompletedTask;
+                         },
+                         OnAuthenticationFailed = context =>
+                         {
+                             var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                             logger.LogError("Authentication failed: {Message}", context.Exception.Message);
+                             return Task.CompletedTask;
+                         },
+                         OnChallenge = context =>
+                         {
+                             var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                             logger.LogError("Challenge error: {ErrorDescription}", context.ErrorDescription);
+                             return Task.CompletedTask;
+                         }
+                     };
+                 }, options => { configuration.Bind("AzureAdB2C", options); });
 
                 // The following flag can be used to get more descriptive errors in development environments
-                IdentityModelEventSource.ShowPII = false;
+                IdentityModelEventSource.ShowPII = true;
                 #endregion AD B2C configuration
 
                 var app = builder.Build();

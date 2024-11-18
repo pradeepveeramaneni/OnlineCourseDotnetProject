@@ -1,4 +1,5 @@
-﻿using LSC.OnlineCourse.Core.Models;
+﻿using LSC.OnlineCourse.Core.Entities;
+using LSC.OnlineCourse.Core.Models;
 using LSC.OnlineCourse.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -108,5 +109,57 @@ namespace LSC.OnlineCourse.Data
 
             return course;
         }
+
+        public async Task AddCourseAsync(Course course)
+        {
+            await _context.Courses.AddAsync(course);
+            await _context.SaveChangesAsync();
+        }
+        public async Task UpdateCourseAsync(Course course)
+        {
+            _context.Courses.Update(course);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteCourseAsync(int courseId)
+        {
+            var course = await GetCourseByIdAsync(courseId);
+            if (course != null)
+            {
+                _context.Courses.Remove(course);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<Course> GetCourseByIdAsync(int courseId)
+        {
+            return await _context.Courses
+                .Include(c => c.SessionDetails)
+                //.Include(c => c.Category)
+                .FirstOrDefaultAsync(c => c.CourseId == courseId);
+        }
+
+        public void RemoveSessionDetail(SessionDetail sessionDetail)
+        {
+            _context.SessionDetails.Remove(sessionDetail);
+        }
+
+        public Task<List<Instructor>> GetAllInstructorsAsync()
+        {
+            return _context.Instructors.ToListAsync();
+        }
+
+        public async Task<bool> UpdateCourseThumbnail(string courseThumbnailUrl, int courseId)
+        {
+            var course = await _context.Courses.FindAsync(courseId);
+            if (course != null)
+            {
+                course.Thumbnail = courseThumbnailUrl;
+            }
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+
     }
 }
